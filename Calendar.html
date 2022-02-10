@@ -90,7 +90,7 @@
 
 
   window.onload = function () {
-    calendarEx.builder('#cal','2022-02-06');
+    new CalendarEx('#cal',2022,3,2);
     // render('#cal','2022-02-06');
   }
 
@@ -108,14 +108,58 @@
     }
   }
 
+  /**
+   *ddd
+   */
+  class CalendarEx {
 
-  let calendarEx = {
+    #target
+    #yyyy
+    #mm
+    #dd
+
+
+    /**
+     * ddd
+     * @param selector {Selection}
+     * @param yyyy {string}
+     */
+    constructor(selector,yyyy,mm,dd) {
+      this.#target = selector;
+      this.#yyyy = yyyy || new Date().getFullYear();
+      this.#mm = mm || new Date().getMonth();
+      this.#dd = dd || new Date().getDate();
+      this.#builder(yyyy,mm,dd);
+    }
+
+    get getTarget(){
+      return this.#target;
+    }
 
 
 
-    builder : function (el,dateString){
+    before(){
+      let d = new Date(this.#yyyy,this.#mm,this.#dd);
+      d.setMonth(d.getMonth()-1);
+      this.#yyyy = d.getFullYear();
+      this.#mm = d.getMonth();
+      this.#dd = d.getDate();
+      this.#builder(d.getFullYear(),d.getMonth(),d.getDate());
+    }
 
-      let dt = new Date(dateString);
+    next(){
+      let d = new Date(this.#yyyy,this.#mm,this.#dd);
+      d.setMonth(d.getMonth()+1);
+      this.#yyyy = d.getFullYear();
+      this.#mm = d.getMonth();
+      this.#dd = d.getDate();
+      this.#builder(d.getFullYear(),d.getMonth(),d.getDate());
+    }
+
+
+
+    #builder(yyyy,mm,dd){
+      let dt = new Date(yyyy,mm,dd);
       let dates = new Array();
       //현재 월의 시작일이 일요일이 아닌경우 앞에 이전달의 요일을 추가
       let beforeMonth = new Date(dt.getFullYear(),dt.getMonth(),dt.getDate());
@@ -124,9 +168,7 @@
       // console.log('beforeMonth',beforeMonth.toLocaleDateString(), 'lastDate',beforeMonth.getLastDate())
 
       //전달의 마지막 주의 첫 요일
-      let firstDayOfBoforeMonth = new Date(beforeMonth.getFullYear(),beforeMonth.getMonth(),
-        (beforeMonth.getLastDate() - beforeMonth.getLastDay()));
-      // console.log('firstDayOfBoforeMonth',firstDayOfBoforeMonth.toLocaleDateString(),'firstday:',firstDayOfBoforeMonth.getDay())
+      let firstDayOfBoforeMonth = new Date(beforeMonth.getFullYear(),beforeMonth.getMonth(), (beforeMonth.getLastDate() - beforeMonth.getLastDay()));
       //캘린더 중 전달 정보를 저장
       for (let date = firstDayOfBoforeMonth.getDate(); date <= beforeMonth.getLastDate() ; date++) {
         let info = {
@@ -163,11 +205,11 @@
         }
       }
       console.log('dates',dates);
-      this._render(dates);
-    },
+      this.#render(dates);
+    }
 
 
-    _render : function (dates){
+    #render(dates){
 
       let table = document.createElement('table');
       let thead = document.createElement('thead');
@@ -228,7 +270,7 @@
         }
       }
       thead.append(trInthead);
-      document.querySelector('#cal').append(table);
+      document.querySelector('#cal').innerHTML = table.outerHTML;
     }
 
     
@@ -236,61 +278,6 @@
 
 
 
-
-  function render(el,dateString){
-
-
-    let dt = new Date(dateString);
-    let dates = new Array();
-    //현재 월의 시작일이 일요일이 아닌경우 앞에 이전달의 요일을 추가
-    let beforeMonth = new Date(dt.getFullYear(),dt.getMonth(),dt.getDate());
-    // console.log('beforeMonth',beforeMonth.toLocaleDateString(), 'lastDate',beforeMonth.getLastDate())
-    beforeMonth.setMonth(beforeMonth.getMonth()-1);//전달로 설정
-    // console.log('beforeMonth',beforeMonth.toLocaleDateString(), 'lastDate',beforeMonth.getLastDate())
-
-    //전달의 마지막 주의 첫 요일
-    let firstDayOfBoforeMonth = new Date(beforeMonth.getFullYear(),beforeMonth.getMonth(),
-      (beforeMonth.getLastDate() - beforeMonth.getLastDay()));
-    // console.log('firstDayOfBoforeMonth',firstDayOfBoforeMonth.toLocaleDateString(),'firstday:',firstDayOfBoforeMonth.getDay())
-    //캘린더 중 전달 정보를 저장
-    for (let date = firstDayOfBoforeMonth.getDate(); date <= beforeMonth.getLastDate() ; date++) {
-      let info = {
-        week : 1,
-        monthFlag : 'beforeMonth'
-      };
-
-      dates.push(new Day(new Date(beforeMonth.getFullYear(), beforeMonth.getMonth(), date),info));
-    }
-    // console.log('dates',dates);
-    //캘린더 중 현재 달 정보를 저장
-    for (let date = 1; date <= dt.getLastDate(); date++) {
-      let currentDay = new Date(dt.getFullYear(), dt.getMonth(), date);
-      let info = {
-        week : currentDay.getWeek(),
-        monthFlag : 'currentMonth'
-      };
-
-
-      dates.push(new Day(currentDay, info) );
-      //마지막날이 토요일이 아닌경우 토요일까지만 다음달의 일자를 추가함
-      if (date == dt.getLastDate() && dt.getLastDay() < 6){
-
-        for (let dateOfNextMonth = 1; dateOfNextMonth <= 6 ; dateOfNextMonth++) {
-          let nextMonth = new Date(dt.getFullYear(),dt.getMonth()+1, dateOfNextMonth);
-          if (nextMonth.getDay() > dt.getLastDay() ){
-            let info = {
-              week : currentDay.getWeek(),
-              monthFlag : 'nextMonth'
-            };
-            dates.push(new Day(new Date(nextMonth.getFullYear(), nextMonth.getMonth(), dateOfNextMonth),info));
-          }
-        }
-      }
-    }
-    console.log('dates',dates);
-
-
-  }
 
 
 
