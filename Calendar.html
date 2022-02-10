@@ -4,154 +4,295 @@
   <meta charset="UTF-8">
   <title>Calendar</title>
 <!--  <script src="calendarEx.js"></script>-->
-  <script>
-    'use strict';
-    window.onload = function () {
-      calenderEx('#cal','2022-01-06');
-
-      // setInterval(()=>{
-      //   console.log('loaded');
-      //   location.reload();
-      // },5000);
+  <style>
+    thead th{border-bottom: 1px solid red}
+    td{ padding: 5px;}
+    .beforeMonth, .nextMonth{ color: gray;}
+    .week{background-color: whitesmoke}
+    .sun{background-color: bisque}
+    .sat{background-color: lightblue}
+    .today{font-weight: bold}
+    .controller{
+      display: flex;
+      justify-content: space-between;
     }
+    .controller-item{flex-wrap: wrap}
+  </style>
 
-
-
-    class Day {
-      /**
-       *
-       * @param {Date} day
-       * @param {Object} info
-       */
-      constructor(day, info) {
-        this.day = day;
-        this.info = info;
-      }
-    }
-
-    function calenderEx(el,dateString){
-      Date.prototype.getWeek = function () {
-        return  Math.ceil(this.getDate() / Date.length);
-      }
-      Date.prototype.getFullMonth = function () {
-        return (this.getMonth() + 1);
-      }
-      Date.prototype.getLastDate = function () {
-        console.log('getLastDayStart',this.toLocaleDateString())
-        let temp = new Date(this.getFullYear(), this.getMonth(), this.getDate());
-        let nextMonth = new Date(this.getFullYear(),this.getMonth()+1,1);
-        let lastDate;
-        for ( let i = this.getDate(); temp.getTime() < nextMonth.getTime(); i++) {
-          temp.setDate(i);
-          lastDate = i;
-          if (this.getMonth() < temp.getMonth() && temp.getDate() == 1){
-            // console.log('break',temp.toLocaleDateString())
-            break;
-          }
-          // console.log('for-temp',i,temp.toLocaleDateString())
-        }
-        // console.log(this.toLocaleDateString(),'=lastDate:',lastDate-1)
-        return lastDate-1;
-      }
-      Date.prototype.getLastDay = function () {
-        let temp = new Date(this.getFullYear(), this.getMonth(), this.getDate());
-        let nextMonth = new Date(this.getFullYear(),this.getMonth()+1,1);
-        let lastDate;
-        for ( let i = this.getDate(); temp.getTime() < nextMonth.getTime(); i++) {
-
-          if (this.getMonth() < temp.getMonth() && temp.getDate() == 1){
-            console.log('break',temp.toLocaleDateString())
-            break;
-          }
-          temp.setDate(i);
-          lastDate = i-1;
-          // console.log('for-temp',i,temp.toLocaleDateString())
-        }
-        temp = new Date(this.getFullYear(),this.getMonth(),lastDate);
-        console.log('lastDay:>>>',temp.toLocaleDateString())
-        // temp.setDate(lastDate);
-        // console.log('lastDay:>>>',temp.toLocaleDateString())
-        return temp.getDay();
-      }
-      Date.prototype.getDayOfWeek = function () {
-        switch (this.getDay()) {
-          case 0 : return "일";
-          case 1 : return "월";
-          case 2 : return "화";
-          case 3 : return "수";
-          case 4 : return "목";
-          case 5 : return "금";
-          case 6 : return "토";
-        }
-      }
-
-      let dt = new Date('2021-12-09');
-      console.log(
-        'dt',dt.toLocaleDateString(),
-        'lastDate',dt.getLastDate(),
-        'lastDay',dt.getLastDay(),
-
-      )
-      let dt1 = new Date('2022-01-09');
-      console.log(
-        'dt1',dt1.toLocaleDateString(),
-        'lastDate',dt1.getLastDate(),
-        'lastDay',dt1.getLastDay(),
-      );
-      let dt2 = new Date('2022-02-22');
-      console.log(
-        'dt2',dt2.toLocaleDateString(),
-        'lastDate',dt2.getLastDate(),
-        'lastDay',dt2.getLastDay(),
-
-      )
-
-      let dates = new Array();
-      //현재 월의 시작일이 일요일이 아닌경우 앞에 이전달의 요일을 추가
-      // let beforeMonth = new Date(dt.getFullYear(),dt.getMonth(),dt.getDate());
-      // beforeMonth.setMonth(dt.getMonth()-1);//전달로 설정
-      // beforeMonth.setDate(1);//1일로 설정
-      // console.log('beforeMonth',beforeMonth.toLocaleDateString())
-      // console.log('beforeMonth',beforeMonth.getLastDate(),beforeMonth.getLastDay());
-
-      //전달의 마지막 주의 첫 요일
-      // let firstDayOfBoforeMonth = new Date(beforeMonth.getFullYear(),beforeMonth.getMonth(),
-      //   (beforeMonth.getLastDate()-beforeMonth.getLastDay()));
-      // console.log('firstDayOfBoforeMonth',firstDayOfBoforeMonth.toLocaleDateString(),'firstday:',firstDayOfBoforeMonth.getDay())
-      //캘린더 중 전달 정보를 저장
-      // for (let date = newDate.getDate(); date <= beforeMonth.getLastDate() ; date++) {
-      //   dates.push(new Day(new Date(newDate.getFullYear()+'-'+newDate.getFullMonth()+'-'+date),{}));
-      // }
-      //캘린더 중 현재 달 정보를 저장
-      // for (let date = 0; date < dt.getLastDate(); date++) {
-      //   let currentDay = new Date(dt.getFullYear()+'-'+dt.getFullMonth()+'-'+ (date+1));
-      //   dates.push(new Day(currentDay, {}) );
-      // }
-
-      // console.log('getFullMonth()',dt.getFullMonth());
-      // console.log('lastDate',dt.getLastDate())
-      // console.log('day',dt.getDay());
-      // console.log('date',dt.getDate());
-      // console.log('week',dt.getWeek());
-      // console.log(dates);
-      let table = document.createElement('table');
-      table.style.border = '1px solid blue';
-      // for (const day of dates) {
-      //   // console.log('day',day.day.toLocaleDateString())
-      //   let tr = document.createElement('tr');
-      //   tr.style.border = '1px solid black';
-      // }
-
-      document.querySelector('#cal').append(table);
-
-
-
-
-    }
-
-  </script>
 </head>
 <body>
+
+
+  <div class="controller">
+    <div class="controller-item">
+      <button>before</button>
+    </div>
+    <div class="controller-item">
+      <button>next</button>
+    </div>
+  </div>
+
   <div id="cal"></div>
 </body>
+<script>
+  'use strict';
+  Date.prototype.getWeek = function () {
+    return  Math.ceil( (this.getDate() + new Date(this.getFullYear(),this.getMonth(),1).getDay()) / Date.length);
+  }
+  Date.prototype.getFullMonth = function () {
+    return (this.getMonth() + 1);
+  }
+  Date.prototype.getLastDate = function () {
+    // console.log('getLastDayStart',this.toLocaleDateString())
+    let temp = new Date(this.getFullYear(), this.getMonth(), this.getDate());
+    let nextMonth = new Date(this.getFullYear(),this.getMonth()+1,1);
+    let lastDate;
+    for ( let i = this.getDate(); temp.getTime() < nextMonth.getTime(); i++) {
+      temp.setDate(i);
+      lastDate = i;
+      if (this.getMonth() < temp.getMonth() && temp.getDate() == 1){
+        // console.log('break',temp.toLocaleDateString())
+        break;
+      }
+      // console.log('for-temp',i,temp.toLocaleDateString())
+    }
+    // console.log(this.toLocaleDateString(),'=lastDate:',lastDate-1)
+    return lastDate-1;
+  }
+  Date.prototype.getLastDay = function () {
+    let temp = new Date(this.getFullYear(), this.getMonth(), this.getDate());
+    let nextMonth = new Date(this.getFullYear(),this.getMonth()+1,1);
+    let lastDate;
+    for ( let i = this.getDate(); temp.getTime() < nextMonth.getTime(); i++) {
+
+      if (this.getMonth() < temp.getMonth() && temp.getDate() == 1){
+        console.log('break',temp.toLocaleDateString())
+        break;
+      }
+      temp.setDate(i);
+      lastDate = i-1;
+      // console.log('for-temp',i,temp.toLocaleDateString())
+    }
+    temp = new Date(this.getFullYear(),this.getMonth(),lastDate);
+    return temp.getDay();
+  }
+  Date.prototype.getDayOfWeek = function () {
+    switch (this.getDay()) {
+      case 0 : return "일";
+      case 1 : return "월";
+      case 2 : return "화";
+      case 3 : return "수";
+      case 4 : return "목";
+      case 5 : return "금";
+      case 6 : return "토";
+    }
+  }
+
+
+  window.onload = function () {
+    calendarEx.builder('#cal','2022-02-06');
+    // render('#cal','2022-02-06');
+  }
+
+
+  class Day {
+
+    /**
+     *
+     * @param {Date} day
+     * @param {Object} info
+     */
+    constructor(day, info) {
+      this.day = day;
+      this.info = info;
+    }
+  }
+
+
+  let calendarEx = {
+
+
+
+    builder : function (el,dateString){
+
+      let dt = new Date(dateString);
+      let dates = new Array();
+      //현재 월의 시작일이 일요일이 아닌경우 앞에 이전달의 요일을 추가
+      let beforeMonth = new Date(dt.getFullYear(),dt.getMonth(),dt.getDate());
+      // console.log('beforeMonth',beforeMonth.toLocaleDateString(), 'lastDate',beforeMonth.getLastDate())
+      beforeMonth.setMonth(beforeMonth.getMonth()-1);//전달로 설정
+      // console.log('beforeMonth',beforeMonth.toLocaleDateString(), 'lastDate',beforeMonth.getLastDate())
+
+      //전달의 마지막 주의 첫 요일
+      let firstDayOfBoforeMonth = new Date(beforeMonth.getFullYear(),beforeMonth.getMonth(),
+        (beforeMonth.getLastDate() - beforeMonth.getLastDay()));
+      // console.log('firstDayOfBoforeMonth',firstDayOfBoforeMonth.toLocaleDateString(),'firstday:',firstDayOfBoforeMonth.getDay())
+      //캘린더 중 전달 정보를 저장
+      for (let date = firstDayOfBoforeMonth.getDate(); date <= beforeMonth.getLastDate() ; date++) {
+        let info = {
+          week : 1,
+          monthFlag : 'beforeMonth'
+        };
+
+        dates.push(new Day(new Date(beforeMonth.getFullYear(), beforeMonth.getMonth(), date),info));
+      }
+      // console.log('dates',dates);
+      //캘린더 중 현재 달 정보를 저장
+      for (let date = 1; date <= dt.getLastDate(); date++) {
+        let currentDay = new Date(dt.getFullYear(), dt.getMonth(), date);
+        let info = {
+          week : currentDay.getWeek(),
+          monthFlag : 'currentMonth'
+        };
+
+
+        dates.push(new Day(currentDay, info) );
+        //마지막날이 토요일이 아닌경우 토요일까지만 다음달의 일자를 추가함
+        if (date == dt.getLastDate() && dt.getLastDay() < 6){
+
+          for (let dateOfNextMonth = 1; dateOfNextMonth <= 6 ; dateOfNextMonth++) {
+            let nextMonth = new Date(dt.getFullYear(),dt.getMonth()+1, dateOfNextMonth);
+            if (nextMonth.getDay() > dt.getLastDay() ){
+              let info = {
+                week : currentDay.getWeek(),
+                monthFlag : 'nextMonth'
+              };
+              dates.push(new Day(new Date(nextMonth.getFullYear(), nextMonth.getMonth(), dateOfNextMonth),info));
+            }
+          }
+        }
+      }
+      console.log('dates',dates);
+      this._render(dates);
+    },
+
+
+    _render : function (dates){
+
+      let table = document.createElement('table');
+      let thead = document.createElement('thead');
+      let tbody = document.createElement('tbody');
+      let trInthead = document.createElement('tr');
+      table.append(thead);
+      table.append(tbody);
+
+
+      //tbody
+      let tr;
+      for (const day of dates) {
+        if (day.day.getDay() == 0){
+          tr = document.createElement('tr')
+        }
+        if (day.info.week == 1){
+          let th = document.createElement('th');
+          th.textContent = day.day.getDayOfWeek();
+          trInthead.append(th);
+
+        }
+
+        let td = document.createElement('td');
+        setTitle : {
+          let div = document.createElement('div');
+          div.textContent = day.day.getDate();
+          switch (day.day.getDayOfWeek()) {
+            case '일' :
+              div.className += 'sun';
+              break;
+            case '토' :
+              div.className +='sat';
+              break;
+            default :
+              div.className += 'week';
+              break;
+          }
+          td.append(div);
+        }
+
+        setDayInfo : {
+          //today
+          if (day.day.getDate() == new Date().getDate()){
+            td.className += ' today ';
+          }
+          td.className += day.info.monthFlag;
+          //info 안에 들어있는 정보들을 td안에 추가
+          for (const infoKey in day.info) {
+            let div = document.createElement('div');
+            div.textContent = day.info[infoKey];
+            td.append(div);
+          }
+          tr.append(td);
+        }
+
+        if (day.day.getDay() == 6){
+          tbody.append(tr);
+        }
+      }
+      thead.append(trInthead);
+      document.querySelector('#cal').append(table);
+    }
+
+    
+  }
+
+
+
+
+  function render(el,dateString){
+
+
+    let dt = new Date(dateString);
+    let dates = new Array();
+    //현재 월의 시작일이 일요일이 아닌경우 앞에 이전달의 요일을 추가
+    let beforeMonth = new Date(dt.getFullYear(),dt.getMonth(),dt.getDate());
+    // console.log('beforeMonth',beforeMonth.toLocaleDateString(), 'lastDate',beforeMonth.getLastDate())
+    beforeMonth.setMonth(beforeMonth.getMonth()-1);//전달로 설정
+    // console.log('beforeMonth',beforeMonth.toLocaleDateString(), 'lastDate',beforeMonth.getLastDate())
+
+    //전달의 마지막 주의 첫 요일
+    let firstDayOfBoforeMonth = new Date(beforeMonth.getFullYear(),beforeMonth.getMonth(),
+      (beforeMonth.getLastDate() - beforeMonth.getLastDay()));
+    // console.log('firstDayOfBoforeMonth',firstDayOfBoforeMonth.toLocaleDateString(),'firstday:',firstDayOfBoforeMonth.getDay())
+    //캘린더 중 전달 정보를 저장
+    for (let date = firstDayOfBoforeMonth.getDate(); date <= beforeMonth.getLastDate() ; date++) {
+      let info = {
+        week : 1,
+        monthFlag : 'beforeMonth'
+      };
+
+      dates.push(new Day(new Date(beforeMonth.getFullYear(), beforeMonth.getMonth(), date),info));
+    }
+    // console.log('dates',dates);
+    //캘린더 중 현재 달 정보를 저장
+    for (let date = 1; date <= dt.getLastDate(); date++) {
+      let currentDay = new Date(dt.getFullYear(), dt.getMonth(), date);
+      let info = {
+        week : currentDay.getWeek(),
+        monthFlag : 'currentMonth'
+      };
+
+
+      dates.push(new Day(currentDay, info) );
+      //마지막날이 토요일이 아닌경우 토요일까지만 다음달의 일자를 추가함
+      if (date == dt.getLastDate() && dt.getLastDay() < 6){
+
+        for (let dateOfNextMonth = 1; dateOfNextMonth <= 6 ; dateOfNextMonth++) {
+          let nextMonth = new Date(dt.getFullYear(),dt.getMonth()+1, dateOfNextMonth);
+          if (nextMonth.getDay() > dt.getLastDay() ){
+            let info = {
+              week : currentDay.getWeek(),
+              monthFlag : 'nextMonth'
+            };
+            dates.push(new Day(new Date(nextMonth.getFullYear(), nextMonth.getMonth(), dateOfNextMonth),info));
+          }
+        }
+      }
+    }
+    console.log('dates',dates);
+
+
+  }
+
+
+
+</script>
 </html>
