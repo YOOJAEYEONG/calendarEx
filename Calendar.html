@@ -5,7 +5,7 @@
   <title>Calendar</title>
 <!--  <script src="calendarEx.js"></script>-->
   <style>
-    thead th{border-bottom: 1px solid red}
+    thead {margin-bottom: 1px;padding-bottom: 1px;border-bottom: 1px solid black}
     td{ padding: 5px;}
     .beforeMonth, .nextMonth{ color: gray;}
     .week{background-color: whitesmoke}
@@ -22,17 +22,9 @@
 </head>
 <body>
 
-
-  <div class="controller">
-    <div class="controller-item">
-      <button>before</button>
-    </div>
-    <div class="controller-item">
-      <button>next</button>
-    </div>
+  <div id="cal">
+    <div id="calendar"></div>
   </div>
-
-  <div id="cal"></div>
 </body>
 <script>
   'use strict';
@@ -90,7 +82,7 @@
 
 
   window.onload = function () {
-    new CalendarEx('#cal',2022,3,2);
+    new CalendarEx('#cal');
     // render('#cal','2022-02-06');
   }
 
@@ -117,26 +109,42 @@
     #yyyy
     #mm
     #dd
+    dates
+    data
 
 
     /**
-     * ddd
-     * @param selector {Selection}
-     * @param yyyy {string}
+     *
+     * @param selector {string}
+     * @param data {JSON} 각 해당일에 추가할 데이터
+     * @param yyyy {number} optional
+     * @param mm  {number} optional
+     * @param dd  {number} optional
+     * @example data : [ {"YYYY-MM-DD" : {데이터 } }, ... ]
      */
-    constructor(selector,yyyy,mm,dd) {
-      this.#target = selector;
+    constructor(selector,data,yyyy,mm,dd) {
+      this.#target = document.querySelector(selector);
+      this.data = data;
       this.#yyyy = yyyy || new Date().getFullYear();
       this.#mm = mm || new Date().getMonth();
       this.#dd = dd || new Date().getDate();
+      this.#target.innerHTML = '';
       this.#builder(yyyy,mm,dd);
     }
+
+
 
     get getTarget(){
       return this.#target;
     }
 
+    get getData(){
+      return this.data;
+    }
 
+    set setData(data){
+      this.data = data;
+    }
 
     before(){
       let d = new Date(this.#yyyy,this.#mm,this.#dd);
@@ -144,7 +152,8 @@
       this.#yyyy = d.getFullYear();
       this.#mm = d.getMonth();
       this.#dd = d.getDate();
-      this.#builder(d.getFullYear(),d.getMonth(),d.getDate());
+      this.#target.innerHTML = '';
+      this.#builder();
     }
 
     next(){
@@ -153,13 +162,17 @@
       this.#yyyy = d.getFullYear();
       this.#mm = d.getMonth();
       this.#dd = d.getDate();
-      this.#builder(d.getFullYear(),d.getMonth(),d.getDate());
+      this.#target.innerHTML = '';
+      this.#builder();
     }
 
+    refresh(){
+      this.#target.innerHTML = '';
+      this.#render(this.dates);
+    }
 
-
-    #builder(yyyy,mm,dd){
-      let dt = new Date(yyyy,mm,dd);
+    #builder(){
+      let dt = new Date(this.#yyyy,this.#mm,this.#dd);
       let dates = new Array();
       //현재 월의 시작일이 일요일이 아닌경우 앞에 이전달의 요일을 추가
       let beforeMonth = new Date(dt.getFullYear(),dt.getMonth(),dt.getDate());
@@ -171,23 +184,26 @@
       let firstDayOfBoforeMonth = new Date(beforeMonth.getFullYear(),beforeMonth.getMonth(), (beforeMonth.getLastDate() - beforeMonth.getLastDay()));
       //캘린더 중 전달 정보를 저장
       for (let date = firstDayOfBoforeMonth.getDate(); date <= beforeMonth.getLastDate() ; date++) {
-        let info = {
-          week : 1,
-          monthFlag : 'beforeMonth'
-        };
-
-        dates.push(new Day(new Date(beforeMonth.getFullYear(), beforeMonth.getMonth(), date),info));
+        let currentDay = new Date(beforeMonth.getFullYear(), beforeMonth.getMonth(), date);
+        let info = {};
+        if (this.data){
+          info = this.data.filter(d => d[currentDay.toISOString().substring(0,10)] != null )[0];
+        }
+        info.week = 1+'주차';
+        info.monthFlag = 'beforeMonth';
+        //[{"2022-03-25":{name:"yoo"}},{"2022-02-02":{key:"value"}}]
+        dates.push(new Day(currentDay,info));
       }
       // console.log('dates',dates);
       //캘린더 중 현재 달 정보를 저장
       for (let date = 1; date <= dt.getLastDate(); date++) {
         let currentDay = new Date(dt.getFullYear(), dt.getMonth(), date);
-        let info = {
-          week : currentDay.getWeek(),
-          monthFlag : 'currentMonth'
-        };
-
-
+        let info = {};
+        if (this.data){
+          info = this.data.filter(d => d[currentDay.toISOString().substring(0,10)] != null )[0];
+        }
+        info.week = currentDay.getWeek() +'주차';
+        info.monthFlag = 'currentMonth';
         dates.push(new Day(currentDay, info) );
         //마지막날이 토요일이 아닌경우 토요일까지만 다음달의 일자를 추가함
         if (date == dt.getLastDate() && dt.getLastDay() < 6){
@@ -195,28 +211,69 @@
           for (let dateOfNextMonth = 1; dateOfNextMonth <= 6 ; dateOfNextMonth++) {
             let nextMonth = new Date(dt.getFullYear(),dt.getMonth()+1, dateOfNextMonth);
             if (nextMonth.getDay() > dt.getLastDay() ){
-              let info = {
-                week : currentDay.getWeek(),
-                monthFlag : 'nextMonth'
-              };
+              let info = {};
+              if (this.data){
+                info = this.data.filter(d => d[nextMonth.toISOString().substring(0,10)] != null )[0];
+              }
+              info.week = currentDay.getWeek()+'주차';
+              info.monthFlag = 'nextMonth';
               dates.push(new Day(new Date(nextMonth.getFullYear(), nextMonth.getMonth(), dateOfNextMonth),info));
             }
           }
         }
       }
       console.log('dates',dates);
+      this.dates = dates;
       this.#render(dates);
     }
 
-
     #render(dates){
+
+      createController : {
+        let controller = document.createElement('div');
+        let controlItemBefore = document.createElement('div');
+        let controlItemNext = document.createElement('div');
+        let controlButtonBefore = document.createElement('button');
+        let controlButtonNext = document.createElement('button');
+
+        controlButtonBefore.textContent = 'before';
+        controlButtonBefore.onclick = () => {this.before();}
+        controlButtonNext.textContent = 'next';
+        controlButtonNext.onclick = () => {this.next();}
+
+        controlItemBefore.className += ' controller-item before';
+        controlItemBefore.append(controlButtonBefore);
+        controlItemNext.className += ' controller-item next';
+        controlItemNext.append(controlButtonNext);
+
+        let display = document.createElement('div');
+        let displayYear = document.createElement('div');
+
+        display.className += ' display ';
+        displayYear.className += ' display-year ';
+        let current = dates.filter(v => v.info.monthFlag == 'currentMonth')[0]
+        displayYear.textContent = current.day.getFullYear() + ' - ' + current.day.getFullMonth()
+        display.append(displayYear);
+
+        controller.className += ' controller ';
+        controller.append(controlItemBefore,display,controlItemNext);
+        this.#target.append(controller);
+      }
 
       let table = document.createElement('table');
       let thead = document.createElement('thead');
       let tbody = document.createElement('tbody');
-      let trInthead = document.createElement('tr');
+      let trInThead = document.createElement('tr');
       table.append(thead);
       table.append(tbody);
+
+      //thead
+      for (let i = 0; i < 7; i++) {
+          let th = document.createElement('th');
+          th.textContent = dates[i].day.getDayOfWeek();
+          trInThead.append(th);
+
+      }
 
 
       //tbody
@@ -224,12 +281,6 @@
       for (const day of dates) {
         if (day.day.getDay() == 0){
           tr = document.createElement('tr')
-        }
-        if (day.info.week == 1){
-          let th = document.createElement('th');
-          th.textContent = day.day.getDayOfWeek();
-          trInthead.append(th);
-
         }
 
         let td = document.createElement('td');
@@ -252,7 +303,7 @@
 
         setDayInfo : {
           //today
-          if (day.day.getDate() == new Date().getDate()){
+          if (day.day.toDateString() == new Date().toDateString() ){
             td.className += ' today ';
           }
           td.className += day.info.monthFlag;
@@ -269,11 +320,17 @@
           tbody.append(tr);
         }
       }
-      thead.append(trInthead);
-      document.querySelector('#cal').innerHTML = table.outerHTML;
+
+
+      thead.append(trInThead);
+      let calendar = document.createElement('div');
+      calendar.className += ' calendar ';
+      calendar.append(table);
+      this.#target.append(calendar);
+      this.#target.style.width = 'fit-content';
+
     }
 
-    
   }
 
 
