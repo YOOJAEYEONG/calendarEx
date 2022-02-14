@@ -4,20 +4,7 @@
   <meta charset="UTF-8">
   <title>Calendar</title>
 <!--  <script src="calendarEx.js"></script>-->
-  <style>
-    thead {margin-bottom: 1px;padding-bottom: 1px;border-bottom: 1px solid black}
-    td{ padding: 5px;}
-    .beforeMonth, .nextMonth{ color: gray;}
-    .week{background-color: whitesmoke}
-    .sun{background-color: bisque}
-    .sat{background-color: lightblue}
-    .today{font-weight: bold}
-    .controller{
-      display: flex;
-      justify-content: space-between;
-    }
-    .controller-item{flex-wrap: wrap}
-  </style>
+  <style rel="stylesheet" resource="./calenderEx.css"></style>
 
 </head>
 <body>
@@ -29,43 +16,36 @@
 <script>
   'use strict';
   Date.prototype.getWeek = function () {
-    return  Math.ceil( (this.getDate() + new Date(this.getFullYear(),this.getMonth(),1).getDay()) / Date.length);
+    return  Math.ceil( (this.getDate() + new Date([this.getFullYear(),this.getFullMonth(),1].join('-')).getDay()) / Date.length);
   }
   Date.prototype.getFullMonth = function () {
     return (this.getMonth() + 1);
   }
   Date.prototype.getLastDate = function () {
-    // console.log('getLastDayStart',this.toLocaleDateString())
-    let temp = new Date(this.getFullYear(), this.getMonth(), this.getDate());
-    let nextMonth = new Date(this.getFullYear(),this.getMonth()+1,1);
+    let temp = new Date([this.getFullYear(), this.getFullMonth(), this.getDate()].join('-'));
+    let nextMonth = new Date([this.getFullYear(),this.getFullMonth()+1,1].join('-'));
     let lastDate;
     for ( let i = this.getDate(); temp.getTime() < nextMonth.getTime(); i++) {
       temp.setDate(i);
       lastDate = i;
-      if (this.getMonth() < temp.getMonth() && temp.getDate() == 1){
-        // console.log('break',temp.toLocaleDateString())
+      if (this.getMonth() < temp.getMonth() && temp.getDate() === 1){
         break;
       }
-      // console.log('for-temp',i,temp.toLocaleDateString())
     }
-    // console.log(this.toLocaleDateString(),'=lastDate:',lastDate-1)
     return lastDate-1;
   }
   Date.prototype.getLastDay = function () {
-    let temp = new Date(this.getFullYear(), this.getMonth(), this.getDate());
-    let nextMonth = new Date(this.getFullYear(),this.getMonth()+1,1);
+    let temp = new Date([this.getFullYear(), this.getFullMonth(), this.getDate()].join('-'));
+    let nextMonth = new Date([this.getFullYear(),this.getFullMonth()+1,1].join('-'));
     let lastDate;
     for ( let i = this.getDate(); temp.getTime() < nextMonth.getTime(); i++) {
-
-      if (this.getMonth() < temp.getMonth() && temp.getDate() == 1){
-        console.log('break',temp.toLocaleDateString())
+      if (this.getMonth() < temp.getMonth() && temp.getDate() === 1){
         break;
       }
       temp.setDate(i);
       lastDate = i-1;
-      // console.log('for-temp',i,temp.toLocaleDateString())
     }
-    temp = new Date(this.getFullYear(),this.getMonth(),lastDate);
+    temp = new Date([this.getFullYear(),this.getFullMonth(),lastDate].join('-'));
     return temp.getDay();
   }
   Date.prototype.getDayOfWeek = function () {
@@ -79,11 +59,17 @@
       case 6 : return "토";
     }
   }
+  Date.prototype.toYYYYMMDD = function () {
+    return [
+      this.getFullYear(),
+      this.getFullMonth() < 10 ? '0'+this.getFullMonth() : this.getFullMonth(),
+      this.getDate() < 10 ? '0'+this.getDate() : this.getDate()
+    ].join('-');
+  }
 
 
   window.onload = function () {
-    new CalendarEx('#cal');
-    // render('#cal','2022-02-06');
+    new CalendarEx('#cal', JSON.parse(JSON.stringify([{"2022-03-01":{name:"yoo"}},{"2022-02-15":{key:"value"}}])),2022,2,15);
   }
 
 
@@ -122,143 +108,158 @@
      * @param dd  {number} optional
      * @example data : [ {"YYYY-MM-DD" : {데이터 } }, ... ]
      */
-    constructor(selector,data,yyyy,mm,dd) {
+    constructor(selector, data, yyyy, mm, dd) {
       this.#target = document.querySelector(selector);
       this.data = data;
       this.#yyyy = yyyy || new Date().getFullYear();
-      this.#mm = mm || new Date().getMonth();
+      this.#mm = mm || new Date().getFullMonth();
       this.#dd = dd || new Date().getDate();
       this.#target.innerHTML = '';
-      this.#builder(yyyy,mm,dd);
+      this.#builder(yyyy, mm, dd);
     }
 
 
-
-    get getTarget(){
+    get getTarget() {
       return this.#target;
     }
 
-    get getData(){
+    get getData() {
       return this.data;
     }
 
-    set setData(data){
+    set setData(data) {
       this.data = data;
     }
 
-    before(){
-      let d = new Date(this.#yyyy,this.#mm,this.#dd);
-      d.setMonth(d.getMonth()-1);
+    before() {
+      let d = new Date([this.#yyyy, this.#mm - 1 , this.#dd].join('-'));
       this.#yyyy = d.getFullYear();
-      this.#mm = d.getMonth();
+      this.#mm = d.getFullMonth();
       this.#dd = d.getDate();
       this.#target.innerHTML = '';
       this.#builder();
     }
 
-    next(){
-      let d = new Date(this.#yyyy,this.#mm,this.#dd);
-      d.setMonth(d.getMonth()+1);
+    next() {
+      let d = new Date([this.#yyyy, this.#mm + 1, this.#dd].join('-'));
       this.#yyyy = d.getFullYear();
-      this.#mm = d.getMonth();
+      this.#mm = d.getFullMonth();
       this.#dd = d.getDate();
       this.#target.innerHTML = '';
       this.#builder();
     }
 
-    refresh(){
+    refresh() {
       this.#target.innerHTML = '';
       this.#render(this.dates);
     }
 
-    #builder(){
-      let dt = new Date(this.#yyyy,this.#mm,this.#dd);
-      let dates = new Array();
-      //현재 월의 시작일이 일요일이 아닌경우 앞에 이전달의 요일을 추가
-      let beforeMonth = new Date(dt.getFullYear(),dt.getMonth(),dt.getDate());
-      // console.log('beforeMonth',beforeMonth.toLocaleDateString(), 'lastDate',beforeMonth.getLastDate())
-      beforeMonth.setMonth(beforeMonth.getMonth()-1);//전달로 설정
-      // console.log('beforeMonth',beforeMonth.toLocaleDateString(), 'lastDate',beforeMonth.getLastDate())
+    #builder() {
+      let dt = new Date( [this.#yyyy, this.#mm, this.#dd].join('-') );//설정한 날짜
+      let dates = [];
 
       //전달의 마지막 주의 첫 요일
-      let firstDayOfBoforeMonth = new Date(beforeMonth.getFullYear(),beforeMonth.getMonth(), (beforeMonth.getLastDate() - beforeMonth.getLastDay()));
+      let firstDayOfBeforeMonth = new Date([dt.getFullYear(), dt.getFullMonth()-1, (dt.getLastDate() - dt.getLastDay())].join('-'));
       //캘린더 중 전달 정보를 저장
-      for (let date = firstDayOfBoforeMonth.getDate(); date <= beforeMonth.getLastDate() ; date++) {
-        let currentDay = new Date(beforeMonth.getFullYear(), beforeMonth.getMonth(), date);
+      for (let date = firstDayOfBeforeMonth.getDate(); date <= firstDayOfBeforeMonth.getLastDate(); date++) {
         let info = {};
-        if (this.data){
-          info = this.data.filter(d => d[currentDay.toISOString().substring(0,10)] != null )[0];
+        let currentDay = new Date([firstDayOfBeforeMonth.getFullYear(), firstDayOfBeforeMonth.getFullMonth(), date].join('-'));
+        let dateKey = currentDay.toYYYYMMDD();
+        if (Array.isArray(this.data) && this.data.some(d => d[dateKey] != null)) {
+          let obj = this.data.filter(d => d[dateKey] != null)[0];
+          info = obj[dateKey];
+        } else if (this.data && this.data.hasOwnProperty(dateKey)) {
+          info = this.data;
         }
-        info.week = 1+'주차';
+        info.week = 1 + '주차';
         info.monthFlag = 'beforeMonth';
-        //[{"2022-03-25":{name:"yoo"}},{"2022-02-02":{key:"value"}}]
-        dates.push(new Day(currentDay,info));
+        dates.push(new Day(currentDay, info));
       }
-      // console.log('dates',dates);
+
       //캘린더 중 현재 달 정보를 저장
       for (let date = 1; date <= dt.getLastDate(); date++) {
-        let currentDay = new Date(dt.getFullYear(), dt.getMonth(), date);
         let info = {};
-        if (this.data){
-          info = this.data.filter(d => d[currentDay.toISOString().substring(0,10)] != null )[0];
+        let currentDay = new Date([dt.getFullYear(),dt.getFullMonth(),date].join('-'));
+        let dateKey = currentDay.toYYYYMMDD();
+        if (Array.isArray(this.data) && this.data.some(d => d[dateKey] != null )) {
+          let obj = this.data.filter(d => d[dateKey] != null)[0];
+          info = obj[dateKey];
+        } else if (this.data && this.data.hasOwnProperty(dateKey)) {
+          info = this.data;
+          console.log('info2',info)
         }
-        info.week = currentDay.getWeek() +'주차';
+        info.week = currentDay.getWeek() + '주차';
         info.monthFlag = 'currentMonth';
-        dates.push(new Day(currentDay, info) );
-        //마지막날이 토요일이 아닌경우 토요일까지만 다음달의 일자를 추가함
-        if (date == dt.getLastDate() && dt.getLastDay() < 6){
+        dates.push(new Day(currentDay, info));
 
-          for (let dateOfNextMonth = 1; dateOfNextMonth <= 6 ; dateOfNextMonth++) {
-            let nextMonth = new Date(dt.getFullYear(),dt.getMonth()+1, dateOfNextMonth);
-            if (nextMonth.getDay() > dt.getLastDay() ){
+
+        //마지막날이 토요일이 아닌경우 토요일까지만 다음달의 일자를 추가함
+        if (date === dt.getLastDate() && dt.getLastDay() < 6) {
+          for (let dateOfNextMonth = 1; dateOfNextMonth <= 6; dateOfNextMonth++) {
+            let nextMonth = new Date([dt.getFullYear(), dt.getFullMonth() + 1, dateOfNextMonth].join('-') );
+            if (nextMonth.getDay() > dt.getLastDay()) {
               let info = {};
-              if (this.data){
-                info = this.data.filter(d => d[nextMonth.toISOString().substring(0,10)] != null )[0];
+              let dateKey = nextMonth.toYYYYMMDD();
+              if (dateKey === "2022-03-01") {
+                // debugger
               }
-              info.week = currentDay.getWeek()+'주차';
+              if (Array.isArray(this.data) && this.data.some(d => d[dateKey] != null)) {
+                let obj = this.data.filter(d => d[dateKey] != null)[0];
+                info = obj[dateKey];
+                // console.log('info1',info)
+              } else if (this.data && this.data.hasOwnProperty(dateKey)) {
+                info = this.data;
+                // console.log('info1',info)
+              }
+              info.week = currentDay.getWeek() + '주차';
               info.monthFlag = 'nextMonth';
-              dates.push(new Day(new Date(nextMonth.getFullYear(), nextMonth.getMonth(), dateOfNextMonth),info));
+              dates.push(new Day(nextMonth, info));
             }
           }
         }
       }
-      console.log('dates',dates);
+      console.log('dates', dates);
       this.dates = dates;
       this.#render(dates);
     }
 
-    #render(dates){
+    #render(dates) {
 
-      createController : {
-        let controller = document.createElement('div');
-        let controlItemBefore = document.createElement('div');
-        let controlItemNext = document.createElement('div');
-        let controlButtonBefore = document.createElement('button');
-        let controlButtonNext = document.createElement('button');
+      /* 컨트롤러 시작 */
+      let controller = document.createElement('div');
+      let controlItemBefore = document.createElement('div');
+      let controlItemNext = document.createElement('div');
+      let controlButtonBefore = document.createElement('button');
+      let controlButtonNext = document.createElement('button');
 
-        controlButtonBefore.textContent = 'before';
-        controlButtonBefore.onclick = () => {this.before();}
-        controlButtonNext.textContent = 'next';
-        controlButtonNext.onclick = () => {this.next();}
-
-        controlItemBefore.className += ' controller-item before';
-        controlItemBefore.append(controlButtonBefore);
-        controlItemNext.className += ' controller-item next';
-        controlItemNext.append(controlButtonNext);
-
-        let display = document.createElement('div');
-        let displayYear = document.createElement('div');
-
-        display.className += ' display ';
-        displayYear.className += ' display-year ';
-        let current = dates.filter(v => v.info.monthFlag == 'currentMonth')[0]
-        displayYear.textContent = current.day.getFullYear() + ' - ' + current.day.getFullMonth()
-        display.append(displayYear);
-
-        controller.className += ' controller ';
-        controller.append(controlItemBefore,display,controlItemNext);
-        this.#target.append(controller);
+      controlButtonBefore.textContent = 'before';
+      controlButtonBefore.onclick = () => {
+        this.before();
       }
+      controlButtonNext.textContent = 'next';
+      controlButtonNext.onclick = () => {
+        this.next();
+      }
+
+      controlItemBefore.className += ' controller-item before';
+      controlItemBefore.append(controlButtonBefore);
+      controlItemNext.className += ' controller-item next';
+      controlItemNext.append(controlButtonNext);
+
+      let display = document.createElement('div');
+      let displayYear = document.createElement('div');
+
+      display.className += ' display ';
+      displayYear.className += ' display-year ';
+      let current = dates.filter(v => v.info.monthFlag === 'currentMonth')[0]
+      displayYear.textContent = current.day.getFullYear() + ' - ' + current.day.getFullMonth()
+      display.append(displayYear);
+
+      controller.className += ' controller ';
+      controller.append(controlItemBefore, display, controlItemNext);
+      this.#target.append(controller);
+      /* 컨트롤러 끝 */
+
 
       let table = document.createElement('table');
       let thead = document.createElement('thead');
@@ -269,74 +270,62 @@
 
       //thead
       for (let i = 0; i < 7; i++) {
-          let th = document.createElement('th');
-          th.textContent = dates[i].day.getDayOfWeek();
-          trInThead.append(th);
-
+        let th = document.createElement('th');
+        th.textContent = dates[i].day.getDayOfWeek();
+        trInThead.append(th);
       }
 
 
       //tbody
       let tr;
-      for (const day of dates) {
-        if (day.day.getDay() == 0){
+      for (const day of dates) {debugger
+        if (day.day.getDay() === 0) {
           tr = document.createElement('tr')
         }
 
         let td = document.createElement('td');
-        setTitle : {
+        let div = document.createElement('div');
+        div.textContent = day.day.getDate().toString();
+        switch (day.day.getDayOfWeek()) {
+          case '일' :
+            div.className += 'sun';
+            break;
+          case '토' :
+            div.className += 'sat';
+            break;
+          default :
+            div.className += 'week';
+            break;
+        }
+        td.append(div);
+
+        //today
+        if (day.day.toDateString() === new Date().toDateString()) {
+          td.className += ' today ';
+        }
+        td.className += day.info.monthFlag;
+        //info 안에 들어있는 정보들을 td안에 추가
+        for (const infoKey in day.info) {
           let div = document.createElement('div');
-          div.textContent = day.day.getDate();
-          switch (day.day.getDayOfWeek()) {
-            case '일' :
-              div.className += 'sun';
-              break;
-            case '토' :
-              div.className +='sat';
-              break;
-            default :
-              div.className += 'week';
-              break;
-          }
+
+          div.textContent = day.info[infoKey];
           td.append(div);
         }
+        tr.append(td);
 
-        setDayInfo : {
-          //today
-          if (day.day.toDateString() == new Date().toDateString() ){
-            td.className += ' today ';
-          }
-          td.className += day.info.monthFlag;
-          //info 안에 들어있는 정보들을 td안에 추가
-          for (const infoKey in day.info) {
-            let div = document.createElement('div');
-            div.textContent = day.info[infoKey];
-            td.append(div);
-          }
-          tr.append(td);
-        }
-
-        if (day.day.getDay() == 6){
+        if (day.day.getDay() === 6) {
           tbody.append(tr);
         }
       }
 
 
-      thead.append(trInThead);
-      let calendar = document.createElement('div');
-      calendar.className += ' calendar ';
-      calendar.append(table);
-      this.#target.append(calendar);
-      this.#target.style.width = 'fit-content';
-
-    }
-
+        thead.append(trInThead);
+        let calendar = document.createElement('div');
+        calendar.className += ' calendar ';
+        calendar.append(table);
+        this.#target.append(calendar);
+        this.#target.style.width = 'fit-content';
+      }
   }
-
-
-
-
-
-
 </script>
 </html>

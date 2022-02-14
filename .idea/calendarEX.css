@@ -1,0 +1,15 @@
+@charset "UTF-8";
+
+thead {margin-bottom: 1px;padding-bottom: 1px;border-bottom: 1px solid black}
+td{ padding: 5px;}
+.beforeMonth, .nextMonth{ color: gray;}
+.week{background-color: whitesmoke}
+.sun{background-color: bisque}
+.sat{background-color: lightblue}
+.today{font-weight: bold}
+.controller{
+    display: flex;
+    justify-content: space-between;
+}
+.controller-item{flex-wrap: wrap}
+button {background-color: whitesmoke;}
