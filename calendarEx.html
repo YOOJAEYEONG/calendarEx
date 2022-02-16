@@ -27,7 +27,18 @@
 
 <script >
   window.onload = function () {
-    let cal1 = new CalendarEx('#cal', JSON.parse(JSON.stringify([{"2022-03-01":{name:"yoo"}},{"2022-02-15":{key:"value"}}])),2022,2,14);
+    let option = {
+      showData : [{"2022-03-01":{name:"yoo"}},{"2022-02-15":{key:"value"}}],
+      hiddenData : null,
+      yyyy : 2022,
+      mm : 2,
+      dd : 14,
+      // 날짜를 클릭하면 해당잘짜가 갖고 있는 데이터를 얻을 수 있다.
+      onClickDay : function (e) {
+        console.log('onClickDay',e);
+      }
+    }
+    let cal1 = new CalendarEx('#cal',option);
     let cal2 = new CalendarEx('#cal2');
   }
 </script>
@@ -122,57 +133,65 @@
 
   class CalendarEx {
 
-    #target
+    target
     #yyyy
     #mm
     #dd
     days
     showData
+    hiddenData
+
+
 
 
     /**
      *
-     * @param selector {string}
-     * @param data {JSON} 각 해당일에 추가할 데이터
-     * @param yyyy {number} optional
-     * @param mm  {number} optional
-     * @param dd  {number} optional
+     * @param target
+     * @param option {JSON}
      * @example data : [ {"YYYY-MM-DD" : {데이터 } }, ... ]
-     */
-    constructor(selector, showData, yyyy, mm, dd) {
-      this.#target = document.querySelector(selector);
-      this.showData = showData;
-      this.#yyyy = yyyy || new Date().getFullYear();
-      this.#mm = mm || new Date().getFullMonth();
-      this.#dd = dd || new Date().getDate();
-      this.#target.innerHTML = '';
-      this.#builder(yyyy, mm, dd);
+     * */
+    constructor(target, option) {
+      this.target = document.querySelector(target);
+      this.showData = option?.showData || {};
+      this.hiddenData = option?.hiddenData || {};
+      this.#yyyy = option?.yyyy || new Date().getFullYear();
+      this.#mm = option?.mm || new Date().getFullMonth();
+      this.#dd = option?.dd || new Date().getDate();
+      this.onClickDay = option?.onClickDay;
+      this.target.innerHTML = '';
+      this.#builder();
     }
 
 
 
-    get getTarget() {
-      return this.#target;
+    get target() {
+      return this.target;
     }
 
-    get getData() {
-      return this.data;
+    get showData(){
+      return this.showData;
     }
 
-    set setData(data) {
-      this.data = data;
+    set showData(data) {
+      this.showData = data;
     }
 
-    /*
-      월 -1 하다가 년도가 달라질수 있음
+    set hiddenData(data){
+      this.hiddenData = data;
+    }
 
-     */
+    get hiddenData(){
+      return this.hiddenData;
+    }
+
+
+    //월 -1 하다가 년도가 달라질수 있음
     before() {
       let d = new Date([this.#yyyy,this.#mm,this.#mm].join('-'));
       d.setMonth(d.getMonth()-1);
       this.#yyyy = d.getFullYear();
       this.#mm = d.getFullMonth();
-      this.#target.innerHTML = '';
+      this.target.innerHTML = '';
       this.#builder();
     }
 
@@ -181,12 +200,12 @@
       d.setMonth(d.getMonth()+1);
       this.#yyyy = d.getFullYear();
       this.#mm = d.getFullMonth();
-      this.#target.innerHTML = '';
+      this.target.innerHTML = '';
       this.#builder();
     }
 
     refresh() {
-      this.#target.innerHTML = '';
+      this.target.innerHTML = '';
       this.#render();
     }
 
@@ -202,7 +221,7 @@
       //캘린더 중 전달 정보를 저장
       for (let date = firstDayOfBeforeMonth.getDate(); date <= beforeMonth.getLastDate(); date++) {
         let showData = {};
-        let hiddenData = {};
+        let hiddenData = this.hiddenData;
         let currentDay = new Date([beforeMonth.getFullYear(), beforeMonth.getFullMonth(), date].join('-'));
         let dateKey = currentDay.toYYYYMMDD();
         if (Array.isArray(this.showData) && this.showData.some(d => d[dateKey] != null)) {
@@ -293,7 +312,7 @@
 
       controller.classList.add('controller');
       controller.append(controlItemBefore, display, controlItemNext);
-      this.#target.append(controller);
+      this.target.append(controller);
       /* 컨트롤러 끝 */
 
 
@@ -355,6 +374,11 @@
           divData.classList.add(infoKey);
           td.append(divData);
         }
+        td.onclick = (ev) => {
+          ev.showData = day.showData;
+          ev.hiddenData = day.hiddenData;
+          this.onClickDay(ev);
+        }
         tr.append(td);
 
         if (day.day.getDay() === 6) {
@@ -366,8 +390,8 @@
         let calendar = document.createElement('div');
         calendar.classList.add('calendar');
         calendar.append(table);
-        this.#target.append(calendar);
-        this.#target.style.width = 'fit-content';
+        this.target.append(calendar);
+        this.target.style.width = 'fit-content';
       }
   }
 </script>
